@@ -1,5 +1,5 @@
 try:
-    number = float(input())
+    number = float(input("Enter a number: "))
     
     if number == 0:
         print("This number is equal to zero.")
@@ -7,4 +7,4 @@ try:
         print("This number is different from zero.")
 
 except ValueError:
-    print("Number Pleae.")
+    print("Number Please.")
