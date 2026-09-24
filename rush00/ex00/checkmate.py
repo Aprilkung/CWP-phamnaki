@@ -1,93 +1,94 @@
 def checkmate(board):
     try:
-        # 1. จัดการ String (หั่นเป็นบรรทัด กันปัญหาขึ้นบรรทัดใหม่ต่าง OS)
-        rows = board.splitlines()
-        height = len(rows)
-        
-        # ถ้าส่งกระดานว่างๆ มา
-        if height == 0:
+
+        if not isinstance(board, str):
+            print("Error")
             return
+        rows = []
+        for line in board.splitlines():
+            if len(line) > 0:
+                rows.append(line)
 
-        width = len(rows[0])
-        king_pos = None
+        size = len(rows)
+        if size == 0:
+            print("Error")
+            return
+        for row in rows:
+            if len(row) != size:
+                print("Error")
+                return
+        kr = -1
+        kc = -1
         king_count = 0
-
-        # 2. Validate กระดาน (ต้องเป็นจัตุรัส) และหาพิกัด King
-        for r in range(height):
-            # เช็คว่าแต่ละบรรทัดยาวเท่ากันไหม (กันคนส่งทรงแปลกๆ หรือ Emoji ที่กินพื้นที่เกิน)
-            if len(rows[r]) != width:
-                return  
-                
-            for c in range(width):
-                if rows[r][c] == 'K':
-                    king_pos = (r, c)
-                    king_count += 1
+        for r in range(size):
+            for c in range(size):
+                if rows[r][c] == "K":
+                    kr = r
+                    kc = c
+                    king_count = king_count + 1
+        if king_count != 1:
+            print("Error")
+            return
         
-        # 3. Validate King (ต้องมีตัวเดียวเป๊ะๆ และกระดานต้องเป็นสี่เหลี่ยมจัตุรัส)
-        if king_count != 1 or width != height:
-            return 
-
-        kr, kc = king_pos
-
-        # 4. ฟังก์ชันยิงเรดาร์ (Raycasting) ออกจากตัว King
-        def check_ray(dr, dc, attackers, check_pawn=False):
-            r, c = kr + dr, kc + dc
-            distance = 1
-            
-            # ยิงเรดาร์ไปเรื่อยๆ จนกว่าจะสุดขอบกระดาน
-            while 0 <= r < height and 0 <= c < width:
+        for r in range(size):
+            for c in range(size):
                 piece = rows[r][c]
-                
-                # ถ้าเจอ "หมาก" ของจริง (ตัวอักษรอื่นถือเป็นพื้นที่ว่าง เรดาร์ทะลุผ่าน)
-                if piece in ['P', 'B', 'R', 'Q']:
+                if piece == "P":
+                    if r - 1 == kr and (c - 1 == kc or c + 1 == kc):
+                        print("Success")
+                        return
                     
-                    # ถ้าเป็นหมากศัตรูที่โจมตีในทิศนี้ได้
-                    if piece in attackers:
-                        return True
+                if piece == "R" or piece == "Q":
+                    if r == kr:
+                        blocked = False
+                        start = min(c, kc) + 1
+                        end = max(c, kc)
+                        for col in range(start, end):
+                            if rows[r][col] in "PBRQ":
+                                blocked = True
+                        if not blocked:
+                            print("Success")
+                            return
                         
-                    # เช็คเงื่อนไขพิเศษสำหรับ Pawn (ตีทแยงลงมาได้แค่ในระยะ 1 ช่อง)
-                    if check_pawn and distance == 1 and piece == 'P':
-                        return True
+                    if c == kc:
+                        blocked = False
+                        start = min(r, kr) + 1
+                        end = max(r, kr)
+                        for row in range(start, end):
+                            if rows[row][c] in "PBRQ":
+                                blocked = True
+                        if not blocked:
+                            print("Success")
+                            return
                         
-                    # ถ้าเจอหมากตัวอื่น (ที่โจมตีทิศนี้ไม่ได้) แปลว่ามัน "บัง" ทางเรดาร์อยู่
-                    return False
-                
-                # ขยับเรดาร์ไปช่องถัดไป
-                r += dr
-                c += dc
-                distance += 1
-                
-            return False
+                if piece == "B" or piece == "Q":
 
-        # กำหนดทิศทาง (dr = ทิศทางขยับของ Row, dc = ทิศทางขยับของ Column)
-        straight = [(-1, 0), (1, 0), (0, -1), (0, 1)] # บน, ล่าง, ซ้าย, ขวา
-        diag_up = [(-1, -1), (-1, 1)]                 # เฉียงขึ้นซ้าย, เฉียงขึ้นขวา
-        diag_down = [(1, -1), (1, 1)]                 # เฉียงลงซ้าย, เฉียงลงขวา
+                    dist_r = abs(kr - r)
+                    dist_c = abs(kc - c)
+                    if dist_r == dist_c and dist_r > 0:
+                        if kr > r:
+                            step_r = 1
+                        else:
+                            step_r = -1
 
-        # 5. เริ่มยิงเรดาร์ตรวจสอบการถูก Check
-        
-        # เช็คแนวตรง (หา Rook, Queen)
-        for dr, dc in straight:
-            if check_ray(dr, dc, ['R', 'Q']):
-                print("Success")
-                return
+                        if kc > c:
+                            step_c = 1
+                        else:
+                            step_c = -1
 
-        # เช็คทแยงขึ้น (หา Bishop, Queen) 
-        for dr, dc in diag_up:
-            if check_ray(dr, dc, ['B', 'Q']):
-                print("Success")
-                return
+                        blocked = False
+                        for i in range(1, dist_r):
+                            check_r = r + (i * step_r)
+                            check_c = c + (i * step_c)
+                            if rows[check_r][check_c] in "PBRQ":
+                                blocked = True
 
-        # เช็คทแยงลง (หา Bishop, Queen และเปิดโหมดเช็ค Pawn ระยะประชิด)
-        for dr, dc in diag_down:
-            if check_ray(dr, dc, ['B', 'Q'], check_pawn=True):
-                print("Success")
-                return
+                        if not blocked:
+                            print("Success")
+                            return
 
-        # ถ้ายิงครบทุกทิศแล้วเรดาร์ไม่เจอศัตรูเลย
         print("Fail")
 
     except Exception:
-
-        print("Nothing")
+        print("Error")
         return
