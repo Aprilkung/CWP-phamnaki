@@ -42,7 +42,7 @@ ABCD
     print("Board5")
     checkmate(board5)
 
-    board6 = """
+    board6 = """\
 🤡R🤡🤡
 🤡🤡K🤡
 🤡🤡🤡P
@@ -54,8 +54,8 @@ ABCD
     board7 = """\
 K..K
 .KK.
-....
-....\
+.KK.
+KKKK\
 """
     print("Board7")
     checkmate(board7)
